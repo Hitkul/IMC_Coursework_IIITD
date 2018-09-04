@@ -1,5 +1,5 @@
 import numpy as np
-
+from sklearn.metrics.pairwise import cosine_similarity
 def gt_list_to_gt_dict(gt):
     gt_mapping = dict()
     for query_i,doc_i in gt:
@@ -43,13 +43,11 @@ def relevance_feedback(vec_docs, vec_queries, sim, gt, n=10):
         non_relevent_docs_index = list(set(top_n_docs_index)-set(relevent_docs_index))
         relevent_docs = vec_docs[relevent_docs_index]
         non_relevent_docs=vec_docs[non_relevent_docs_index]
-        update_factor = np.subtract(alpha*np.mean(relevent_docs,axis=0), beta*np.mean(non_relevent_docs,axis=0))
-        print "================================="
-        print update_factor.shape
+        updated_queries[index,:] = np.add(query.toarray(),np.subtract(alpha*np.mean(relevent_docs,axis=0), beta*np.mean(non_relevent_docs,axis=0)))
+    
+    print "queries updated"
 
-
-
-    rf_sim = sim # change
+    rf_sim = cosine_similarity(vec_docs, updated_queries)
     return rf_sim
 
 
