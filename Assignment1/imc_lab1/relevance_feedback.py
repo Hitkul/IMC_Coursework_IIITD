@@ -32,13 +32,22 @@ def relevance_feedback(vec_docs, vec_queries, sim, gt, n=10):
     # print np.argsort(-sim[:, 0])[:6]
     gt_mapping = gt_list_to_gt_dict(gt)
 
+    alpha=0.75
+    beta=0.15
+
     updated_queries = vec_queries.copy()
 
     for index,query in enumerate(vec_queries):
-        top_n_docs = np.argsort(-sim[:, index])[:n]
-        relevent_docs = [x for x in top_n_docs if x in gt_mapping[index+1]]
-        non_relevent_docs = list(set(top_n_docs)-set(relevent_docs))
-        print len(relevent_docs)+len(non_relevent_docs)
+        top_n_docs_index = np.argsort(-sim[:, index])[:n]
+        relevent_docs_index = [x for x in top_n_docs_index if x in gt_mapping[index+1]]
+        non_relevent_docs_index = list(set(top_n_docs_index)-set(relevent_docs_index))
+        relevent_docs = vec_docs[relevent_docs_index]
+        non_relevent_docs=vec_docs[non_relevent_docs_index]
+        update_factor = np.subtract(alpha*np.mean(relevent_docs,axis=0), beta*np.mean(non_relevent_docs,axis=0))
+        print "================================="
+        print update_factor.shape
+
+
 
     rf_sim = sim # change
     return rf_sim
