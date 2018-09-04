@@ -31,7 +31,13 @@ def relevance_feedback(vec_docs, vec_queries, sim, gt, n=10):
 
     # print np.argsort(-sim[:, 0])[:6]
     gt_mapping = gt_list_to_gt_dict(gt)
-    print gt_mapping[1]
+
+    updated_queries = vec_queries.copy()
+
+    for query in updated_queries:
+        print query.shape
+
+
     rf_sim = sim # change
     return rf_sim
 
