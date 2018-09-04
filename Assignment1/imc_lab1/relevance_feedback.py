@@ -1,4 +1,15 @@
-def relevance_feedback(vec_docs, vec_queries, sim, n=10):
+import numpy as np
+
+def gt_list_to_gt_dict(gt):
+    gt_mapping = dict()
+    for query_i,doc_i in gt:
+        if query_i in gt_mapping.keys():
+            gt_mapping[query_i].append(doc_i)
+        else:
+            gt_mapping[query_i] = [doc_i]
+
+    return gt_mapping
+def relevance_feedback(vec_docs, vec_queries, sim, gt, n=10):
     """
     relevance feedback
     Parameters
@@ -17,6 +28,10 @@ def relevance_feedback(vec_docs, vec_queries, sim, n=10):
     rf_sim : numpy array
         matrix of similarities scores between documents (rows) and updated queries (columns)
     """
+
+    # print np.argsort(-sim[:, 0])[:6]
+    gt_mapping = gt_list_to_gt_dict(gt)
+    print gt_mapping[1]
     rf_sim = sim # change
     return rf_sim
 

@@ -122,7 +122,7 @@ if __name__ == '__main__':
     evaluate_retrieval(sim_matrix, gt, verbose=args.verbose)
 
     print '\nRetrieval with Relevance Feedback'
-    rf_sim_matrix = relevance_feedback(vec_docs, vec_queries, sim_matrix)
+    rf_sim_matrix = relevance_feedback(vec_docs, vec_queries, sim_matrix,gt)
     if args.verbose:
         for i in range(rf_sim_matrix.shape[1]):
             ranked_documents = np.argsort(-rf_sim_matrix[:, i])
