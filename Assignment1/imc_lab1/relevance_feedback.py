@@ -8,10 +8,10 @@ warnings.filterwarnings("ignore")
 def gt_list_to_gt_dict(gt):
     gt_mapping = dict()
     for query_i,doc_i in gt:
-        if query_i in gt_mapping.keys():
-            gt_mapping[query_i].append(doc_i)
+        if query_i-1 in gt_mapping.keys():
+            gt_mapping[query_i-1].append(doc_i-1)
         else:
-            gt_mapping[query_i] = [doc_i]
+            gt_mapping[query_i-1] = [doc_i-1]
 
     return gt_mapping
 
@@ -26,11 +26,22 @@ def vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n):
 
     for index,query in enumerate(vec_queries):
         top_n_docs_index = np.argsort(-sim[:, index])[:n]
-        relevent_docs_index = [x for x in top_n_docs_index if x in gt_mapping[index+1]]
+        # print "============================================================"
+        # print top_n_docs_index
+        # top_n_docs_index+=1
+        # print top_n_docs_index
+        relevent_docs_index = [x for x in top_n_docs_index if x in gt_mapping[index]]
         non_relevent_docs_index = list(set(top_n_docs_index)-set(relevent_docs_index))
+        # print len(relevent_docs_index)
+        # print len(non_relevent_docs_index)
         relevent_docs = vec_docs[relevent_docs_index]
         non_relevent_docs=vec_docs[non_relevent_docs_index]
-        updated_queries[index,:] = np.add(query.toarray(),np.subtract(alpha*np.mean(relevent_docs,axis=0), beta*np.mean(non_relevent_docs,axis=0)))
+        if len(relevent_docs_index)==0:
+            updated_queries[index,:] = np.subtract(query.toarray(), beta*np.mean(non_relevent_docs,axis=0))
+        elif len(non_relevent_docs_index)==0:
+            updated_queries[index,:] = np.add(query.toarray(),alpha*np.mean(relevent_docs,axis=0))
+        else:
+            updated_queries[index,:] = np.add(query.toarray(),np.subtract(alpha*np.mean(relevent_docs,axis=0), beta*np.mean(non_relevent_docs,axis=0)))
     
     return updated_queries
 
@@ -64,7 +75,7 @@ def relevance_feedback(vec_docs, vec_queries, sim, gt, n=10):
     return rf_sim
 
 
-def relevance_feedback_exp(vec_docs, vec_queries, sim, tfidf_model, n=10):
+def relevance_feedback_exp(vec_docs, vec_queries, sim, tfidf_model,gt, n=10):
     """
     relevance feedback with expanded queries
     Parameters
@@ -86,5 +97,16 @@ def relevance_feedback_exp(vec_docs, vec_queries, sim, tfidf_model, n=10):
         matrix of similarities scores between documents (rows) and updated queries (columns)
     """
 
-    rf_sim = sim  # change
+    gt_mapping = gt_list_to_gt_dict(gt)
+
+    updated_queries = vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n)
+    print "queries updated"
+
+    # list_of_terms = []
+
+    # for query in gt_mapping.keys():
+    #     for doc in gt_mapping[query]:
+
+
+    rf_sim = cosine_similarity(vec_docs, updated_queries)
     return rf_sim
