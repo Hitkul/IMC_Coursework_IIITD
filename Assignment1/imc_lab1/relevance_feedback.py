@@ -26,14 +26,8 @@ def vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n):
 
     for index,query in enumerate(vec_queries):
         top_n_docs_index = np.argsort(-sim[:, index])[:n]
-        # print "============================================================"
-        # print top_n_docs_index
-        # top_n_docs_index+=1
-        # print top_n_docs_index
         relevent_docs_index = [x for x in top_n_docs_index if x in gt_mapping[index]]
         non_relevent_docs_index = list(set(top_n_docs_index)-set(relevent_docs_index))
-        # print len(relevent_docs_index)
-        # print len(non_relevent_docs_index)
         relevent_docs = vec_docs[relevent_docs_index]
         non_relevent_docs=vec_docs[non_relevent_docs_index]
         if len(relevent_docs_index)==0:
@@ -99,13 +93,19 @@ def relevance_feedback_exp(vec_docs, vec_queries, sim, tfidf_model,gt, n=10):
 
     gt_mapping = gt_list_to_gt_dict(gt)
 
-    updated_queries = vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n)
-    print "queries updated"
+    source_queries = vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n)
+    updated_queries = source_queries.copy().toarray()
 
-    # list_of_terms = []
+    for query_index in gt_mapping.keys(): 
+        list_of_terms = []
+        for doc_index in gt_mapping[query_index]:
+            tfidf_vec_of_doc = vec_docs[doc_index].toarray()[0]
+            for term_index,term_tfidf in enumerate(tfidf_vec_of_doc):
+                list_of_terms.append((term_tfidf,term_index,doc_index))
+        list_of_terms.sort()
+        for term_tfidf,term_index,_ in list_of_terms[-n:]:
+            updated_queries[query_index][term_index] = term_tfidf
 
-    # for query in gt_mapping.keys():
-    #     for doc in gt_mapping[query]:
 
 
     rf_sim = cosine_similarity(vec_docs, updated_queries)
