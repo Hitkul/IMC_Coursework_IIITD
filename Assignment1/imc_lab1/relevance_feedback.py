@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-
+from scipy import sparse
 #Not a nice thing to do, but It is needed here..
 import warnings
 warnings.filterwarnings("ignore")
@@ -61,10 +61,15 @@ def relevance_feedback(vec_docs, vec_queries, sim, gt, n=10):
     """
 
     gt_mapping = gt_list_to_gt_dict(gt)
+    number_of_itr = 3
 
-    updated_queries = vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n)
-    print "queries updated"
-
+    while number_of_itr!=0:
+        print "iteration left == {}".format(number_of_itr)
+        number_of_itr-=1
+        updated_queries = vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n)
+        vec_queries = updated_queries
+        sim = cosine_similarity(vec_docs, updated_queries)
+    
     rf_sim = cosine_similarity(vec_docs, updated_queries)
     return rf_sim
 
@@ -93,18 +98,27 @@ def relevance_feedback_exp(vec_docs, vec_queries, sim, tfidf_model,gt, n=10):
 
     gt_mapping = gt_list_to_gt_dict(gt)
 
-    source_queries = vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n)
-    updated_queries = source_queries.copy().toarray()
+    number_of_itr = 3
+    while number_of_itr!=0:
+        print "iterations left == {}".format(number_of_itr)
+        number_of_itr-=1
 
-    for query_index in gt_mapping.keys(): 
-        list_of_terms = []
-        for doc_index in gt_mapping[query_index]:
-            tfidf_vec_of_doc = vec_docs[doc_index].toarray()[0]
-            for term_index,term_tfidf in enumerate(tfidf_vec_of_doc):
-                list_of_terms.append((term_tfidf,term_index,doc_index))
-        list_of_terms.sort()
-        for term_tfidf,term_index,_ in list_of_terms[-n:]:
-            updated_queries[query_index][term_index] = term_tfidf
+        source_queries = vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n)
+        updated_queries = source_queries.copy().toarray()
+
+        for query_index in gt_mapping.keys(): 
+            list_of_terms = []
+            for doc_index in gt_mapping[query_index]:
+                tfidf_vec_of_doc = vec_docs[doc_index].toarray()[0]
+                for term_index,term_tfidf in enumerate(tfidf_vec_of_doc):
+                    list_of_terms.append((term_tfidf,term_index,doc_index))
+            list_of_terms.sort()
+            for term_tfidf,term_index,_ in list_of_terms[-n:]:
+                updated_queries[query_index][term_index] = term_tfidf
+        
+        vec_queries = updated_queries
+        sim = cosine_similarity(vec_docs, updated_queries)
+        vec_queries = sparse.csr_matrix(vec_queries)
 
 
 
