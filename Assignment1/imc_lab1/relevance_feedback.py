@@ -1,5 +1,10 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+
+#Not a nice thing to do, but It is needed here..
+import warnings
+warnings.filterwarnings("ignore")
+
 def gt_list_to_gt_dict(gt):
     gt_mapping = dict()
     for query_i,doc_i in gt:
