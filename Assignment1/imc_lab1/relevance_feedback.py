@@ -14,6 +14,27 @@ def gt_list_to_gt_dict(gt):
             gt_mapping[query_i] = [doc_i]
 
     return gt_mapping
+
+
+def vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n):
+    updated_queries = vec_queries.copy()
+
+
+    alpha=0.75
+    beta=0.15
+
+
+    for index,query in enumerate(vec_queries):
+        top_n_docs_index = np.argsort(-sim[:, index])[:n]
+        relevent_docs_index = [x for x in top_n_docs_index if x in gt_mapping[index+1]]
+        non_relevent_docs_index = list(set(top_n_docs_index)-set(relevent_docs_index))
+        relevent_docs = vec_docs[relevent_docs_index]
+        non_relevent_docs=vec_docs[non_relevent_docs_index]
+        updated_queries[index,:] = np.add(query.toarray(),np.subtract(alpha*np.mean(relevent_docs,axis=0), beta*np.mean(non_relevent_docs,axis=0)))
+    
+    return updated_queries
+
+
 def relevance_feedback(vec_docs, vec_queries, sim, gt, n=10):
     """
     relevance feedback
@@ -34,22 +55,9 @@ def relevance_feedback(vec_docs, vec_queries, sim, gt, n=10):
         matrix of similarities scores between documents (rows) and updated queries (columns)
     """
 
-    # print np.argsort(-sim[:, 0])[:6]
     gt_mapping = gt_list_to_gt_dict(gt)
 
-    alpha=0.75
-    beta=0.15
-
-    updated_queries = vec_queries.copy()
-
-    for index,query in enumerate(vec_queries):
-        top_n_docs_index = np.argsort(-sim[:, index])[:n]
-        relevent_docs_index = [x for x in top_n_docs_index if x in gt_mapping[index+1]]
-        non_relevent_docs_index = list(set(top_n_docs_index)-set(relevent_docs_index))
-        relevent_docs = vec_docs[relevent_docs_index]
-        non_relevent_docs=vec_docs[non_relevent_docs_index]
-        updated_queries[index,:] = np.add(query.toarray(),np.subtract(alpha*np.mean(relevent_docs,axis=0), beta*np.mean(non_relevent_docs,axis=0)))
-    
+    updated_queries = vector_adjustment(vec_docs,vec_queries,sim,gt_mapping,n)
     print "queries updated"
 
     rf_sim = cosine_similarity(vec_docs, updated_queries)
