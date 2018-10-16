@@ -28,18 +28,33 @@ def convert_pixel_rgb_to_lab(rgb_pixel_tuple):
 def convert_pixel_lab_to_rgb(lab_pixel_tuple):
     lab = LabColor(lab_pixel_tuple[0],lab_pixel_tuple[1],lab_pixel_tuple[2])
     rgb = convert_color(lab, sRGBColor)
-    return (rgb.rgb_r,rgb.rgb_g,rgb.rgb_b)
+    return (int(rgb.rgb_r),int(rgb.rgb_g),int(rgb.rgb_b))
 
 def style_transfer(source_image,target_image):
-    source_pix_data = source_image.load()
-    target_pix_data = target_image.load()
+    source_pix_rgb_data = source_image.load()
+    target_pix_rgb_data = target_image.load()
+
+    source_pix_lab_data = []
+    target_pix_lab_data = []
+    for x in range(0,source_image.size[0]):
+        for y in range(0,source_image.size[1]):
+            temp = []
+            temp.append(convert_pixel_rgb_to_lab(source_pix_rgb_data[x,y]))
+        source_pix_lab_data.append(temp)
+
+    for x in range(0,target_image.size[0]):
+        for y in range(0,target_image.size[1]):
+            temp = []
+            temp.append(convert_pixel_rgb_to_lab(target_pix_rgb_data[x,y]))
+        target_pix_lab_data.append(temp)
+
     
-    rgb = sRGBColor(152, 255, 80)
-    print(rgb)
-    lab = convert_color(rgb, LabColor)
-    print(lab.lab_l)
-    rgb = convert_color(lab, sRGBColor)
-    print(rgb)
+    # rgb = sRGBColor(152, 255, 80)
+    # print(rgb)
+    # lab = convert_color(rgb, LabColor)
+    # print(lab.lab_l)
+    # rgb = convert_color(lab, sRGBColor)
+    # print(rgb)
 
 
 
